@@ -2,7 +2,7 @@
 
 [Kubexpose](https://github.com/abhirockzz/kubexpose-operator) makes it easy to access a Kubernetes `Deployment` over a public URL. It's a [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) backed by a [Custom Resource Definition](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
 
-> `Kubexpose` is an experimental project built using [kubebuilder](kubebuilder.io) and [available on GitHub](https://github.com/abhirockzz/kubexpose-operator)
+> `Kubexpose` is an experimental project built using [kubebuilder](kubebuilder.io)
 
 ## Quick start
 
