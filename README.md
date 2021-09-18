@@ -1,8 +1,8 @@
 # Kubexpose: Access your Kubernetes Deployment over the Internet
 
-[Kubexpose](https://github.com/abhirockzz/kubexpose-operator) makes it easy to access your `Deployment` (web service) over a public URL. It's a proof-of-concept [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) that defines a [Custom Resource Definition](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) and an Operator to manage it.
+[Kubexpose](https://github.com/abhirockzz/kubexpose-operator) makes it easy to access a Kubernetes `Deployment` over a public URL. It's a [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) backed by a [Custom Resource Definition](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
 
-> `Kubexpose` is built using [kubebuilder](kubebuilder.io)
+> `Kubexpose` is an experimental project built using [kubebuilder](kubebuilder.io) and [available on GitHub](https://github.com/abhirockzz/kubexpose-operator)
 
 ## Quick start
 
