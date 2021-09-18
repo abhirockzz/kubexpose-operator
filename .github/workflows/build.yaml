@@ -38,4 +38,4 @@ jobs:
         run: echo $DOCKER_HUB_ACCESS_TOKEN | docker login -u $DOCKER_HUB_USERNAME --password-stdin
 
       - name: Publish on Docker Hub
-        run: make docker-build docker-push abhirockzz/kubexpose
+        run: make docker-build docker-push IMG=abhirockzz/kubexpose
