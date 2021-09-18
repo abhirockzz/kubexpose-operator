@@ -9,8 +9,11 @@
 Any Kubernetes cluster will work (`minikube`, `kind`, Docker Desktop, on the cloud, whatever...). 
 To deploy the operator and required components:
 
-```
+```bash
 kubectl apply -f https://raw.githubusercontent.com/abhirockzz/kubexpose-operator/master/kubexpose-all-in-one.yaml
+
+# check CRD
+kubectl get crd
 ```
 
 Make sure Operator is up and running:
@@ -44,8 +47,8 @@ kubectl get kubexpose/kubexpose-test -o=jsonpath='{.status.url}'
 Confirm that the `Service` and `Deployment` have been created as well:
 
 ```
-kubectl get svc/nginx-svc-kubexpose-test
-kubectl get deployment/nginx-expose-kubexpose-test
+kubectl get svc/nginx-test-svc-kubexpose-test
+kubectl get deployment/nginx-test-expose-kubexpose-test
 ```
 
 > You can try out other scenarios such as trying to `Deployment` and/or `Service` - the Operator will reconcile or bring things back to the state as specified in the resource.
@@ -58,7 +61,7 @@ kubectl delete kubexpose/kubexpose-test
 
 > This will also delete the `Service` and `Deployment` which were created for this resource
 
-If you to uninstall the Operator:
+To uninstall the Operator:
 
 ```bash
 kubectl delete -f https://raw.githubusercontent.com/abhirockzz/kubexpose-operator/master/kubexpose-all-in-one.yaml
