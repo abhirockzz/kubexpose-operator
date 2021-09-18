@@ -1,0 +1,20 @@
+# permissions for end users to view kubexposes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubexpose-viewer-role
+rules:
+- apiGroups:
+  - kubexpose.kubexpose.io
+  resources:
+  - kubexposes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - kubexpose.kubexpose.io
+  resources:
+  - kubexposes/status
+  verbs:
+  - get

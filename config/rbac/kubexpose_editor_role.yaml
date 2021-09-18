@@ -1,0 +1,24 @@
+# permissions for end users to edit kubexposes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubexpose-editor-role
+rules:
+- apiGroups:
+  - kubexpose.kubexpose.io
+  resources:
+  - kubexposes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kubexpose.kubexpose.io
+  resources:
+  - kubexposes/status
+  verbs:
+  - get

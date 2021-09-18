@@ -1,0 +1,9 @@
+apiVersion: kubexpose.kubexpose.io/v1
+kind: Kubexpose
+metadata:
+  name: kubexpose123
+spec:
+  # Add fields here
+  sourceDeployment: nginx2
+  port: 80
+  targetNamespace: default

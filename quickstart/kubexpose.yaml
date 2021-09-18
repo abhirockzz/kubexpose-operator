@@ -1,0 +1,8 @@
+apiVersion: kubexpose.kubexpose.io/v1
+kind: Kubexpose
+metadata:
+  name: kubexpose-test
+spec:
+  sourceDeployment: nginx-test
+  port: 80
+  targetNamespace: default
