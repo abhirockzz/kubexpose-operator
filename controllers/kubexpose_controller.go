@@ -50,7 +50,6 @@ const (
 //+kubebuilder:rbac:groups=kubexpose.kubexpose.io,resources=kubexposes/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=kubexpose.kubexpose.io,resources=kubexposes/finalizers,verbs=update
 
-//kubexpose needs to work with Service, Deployment, Pod
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;update;patch;delete
@@ -67,7 +66,6 @@ func (r *KubexposeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	logger := log.Log.WithValues("kubexpose", req.NamespacedName)
 	logger.Info("reconciling resource")
 
-	// fetch resource
 	var kubexposeResource kubexposev1.Kubexpose
 	err := r.Get(ctx, req.NamespacedName, &kubexposeResource)
 
@@ -80,17 +78,13 @@ func (r *KubexposeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			return ctrl.Result{}, nil
 		}
 
-		// there was an error reading the request
 		logger.Error(err, "failed to get kubexpose resource")
-		return ctrl.Result{}, err // note: this will requeue
+		return ctrl.Result{}, err
 	}
 
 	// check for Service and create one if it does not exist
-
 	serviceName := fmt.Sprintf(serviceNameFormat, kubexposeResource.Spec.SourceDeploymentName, kubexposeResource.Name)
 	namespace := kubexposeResource.Spec.TargetNamespace
-
-	//logger.Info("reconciling service", "namespace", namespace, "name", serviceName)
 
 	var kubexposeService corev1.Service
 	err = r.Get(ctx, types.NamespacedName{Namespace: req.Namespace, Name: serviceName}, &kubexposeService)
@@ -104,13 +98,8 @@ func (r *KubexposeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 	}
 
-	//logger.Info("reconciled service successfully", "namespace", namespace, "name", serviceName)
-
 	// check for Deployment and create one if it does not exist
-
 	deploymentName := fmt.Sprintf(deploymentNameFormat, kubexposeResource.Spec.SourceDeploymentName, kubexposeResource.Name)
-
-	//logger.Info("reconciling deployment", "namespace", namespace, "name", deploymentName)
 
 	var ngrokDeployment appsv1.Deployment
 	err = r.Get(ctx, types.NamespacedName{Namespace: namespace, Name: deploymentName}, &ngrokDeployment)
@@ -124,22 +113,17 @@ func (r *KubexposeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 	}
 
-	//logger.Info("reconciled deployment successfully", "namespace", namespace, "name", deploymentName)
-
 	statusURL := kubexposeResource.Status.PublicURL
 	logger.Info("url as per status", "kubexpose resource", kubexposeResource.Name, "url", statusURL)
 
 	latestNgrokURL, err := r.getURL(ctx, req, &kubexposeResource)
-
 	if err != nil {
-		// there will be intermitten errors when trying to search for url.
+		// there will be intermittent errors when trying to search for url.
 		// logging it as info to avoid console pollution
 		logger.Info("error fetching public url", "error", err.Error())
 		// we are using nil instead of err below
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	}
-
-	//logger.Info("public url as per deployment", "kubexpose resource", kubexposeResource.Name, "url", latestNgrokURL)
 
 	// if they are not same, update the status with the new URL in deployment
 	if statusURL != latestNgrokURL {

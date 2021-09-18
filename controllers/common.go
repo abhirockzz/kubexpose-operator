@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	stderror "errors"
 
@@ -184,7 +183,6 @@ func (r *KubexposeReconciler) getURL(ctx context.Context, req ctrl.Request, kexp
 		//logger.Error(err, "failed to get rest config")
 		return "", err
 	}
-	//logger.Info("got rest config object", "host", cfg.Host)
 
 	cfg.APIPath = "/api"
 	cfg.GroupVersion = &schema.GroupVersion{Group: "", Version: "v1"}
@@ -270,16 +268,10 @@ func (r *KubexposeReconciler) getURL(ctx context.Context, req ctrl.Request, kexp
 		return "", err
 	}
 
-	// ignoring stderr in this case
-	/*if stderr.Bytes() != nil {
-	}*/
-
 	if stdout.Bytes() == nil {
 		//logger.Error(err, "no response from command")
 		return "", err
 	}
-
-	//logger.Info("'exec' request finished sucessfully", "response", stdout.String())
 
 	var ngrokInfo NgrokInfo
 	err = json.Unmarshal(stdout.Bytes(), &ngrokInfo)
@@ -320,147 +312,7 @@ func (r *KubexposeReconciler) updateStatus(ctx context.Context, req ctrl.Request
 
 	err := r.Status().Update(ctx, kexp)
 	if err != nil {
-		logger.Error(err, "failed to update  status with public URL info")
-		return ctrl.Result{}, err
-	}
-
-	logger.Info(kexp.Name + " status updated with public url info")
-
-	return ctrl.Result{}, nil
-}
-
-// getPublicURL executes a command (equivalent to kubectl exec) in the ngrok pod to get the public url
-func (r *KubexposeReconciler) _getPublicURL(ctx context.Context, req ctrl.Request, kexp *kubexposev1.Kubexpose) (ctrl.Result, error) {
-	logger := log.Log.WithValues("kubexpose", req.NamespacedName)
-
-	logger.Info("fetching url at which deployment will be accessible")
-
-	cfg, err := config.GetConfig()
-	if err != nil {
-		logger.Error(err, "failed to get rest config")
-		return ctrl.Result{}, nil //nothing much we can do here. no need to requeue
-		//TODO set CR status to something logical
-	}
-	//logger.Info("got rest config object", "host", cfg.Host)
-
-	cfg.APIPath = "/api"
-	cfg.GroupVersion = &schema.GroupVersion{Group: "", Version: "v1"}
-	cfg.NegotiatedSerializer = serializer.WithoutConversionCodecFactory{}
-
-	var pods corev1.PodList
-	selectorLabels := "exposing=" + kexp.Spec.SourceDeploymentName + ",kubexpose-cr=" + kexp.Name
-
-	//logger.Info("looking for pod", "labels", selectorLabels)
-
-	r1, _ := labels.NewRequirement("exposing", selection.Equals, []string{kexp.Spec.SourceDeploymentName})
-	r2, _ := labels.NewRequirement("kubexpose-cr", selection.Equals, []string{kexp.Name})
-
-	err = r.List(ctx, &pods, &client.ListOptions{LabelSelector: labels.NewSelector().Add(*r1, *r2), Namespace: kexp.Spec.TargetNamespace})
-
-	if err != nil {
-		logger.Error(err, "failed to list pods")
-		return ctrl.Result{}, err
-	}
-
-	if len(pods.Items) == 0 {
-		logger.Info("no pods found")
-		return ctrl.Result{Requeue: true}, nil
-	}
-
-	// we expect to get ONE pod only. there might be a situation when a Pod with same label might be terminating. we want retry in this case
-	if len(pods.Items) > 1 {
-		logger.Info("multiple pods found!", "labels", selectorLabels)
-		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
-	}
-
-	podName := pods.Items[0].Name
-
-	//logger.Info("found pod", "Name", podName)
-
-	restClient, err := rest.RESTClientFor(cfg)
-	if err != nil {
-		logger.Error(err, "failed to get rest client")
-		return ctrl.Result{Requeue: false}, err //no need to requeue
-	}
-
-	namespace := kexp.Spec.TargetNamespace
-
-	execReq := restClient.Post().
-		Namespace(namespace).
-		Resource("pods").
-		Name(podName).
-		SubResource("exec").
-		VersionedParams(&corev1.PodExecOptions{
-			Container: "ngrok",
-			Command:   []string{"curl", "http://localhost:4040/api/tunnels"},
-			//Stdin:     true,
-			Stdout: true,
-			Stderr: true,
-			TTY:    false,
-		}, runtime.NewParameterCodec(r.Scheme))
-
-	executor, err := remotecommand.NewSPDYExecutor(cfg, http.MethodPost, execReq.URL())
-	if err != nil {
-		return ctrl.Result{Requeue: false}, err //no need to requeue
-	}
-
-	if err != nil {
-		logger.Error(err, "failed to create command executor")
-		return ctrl.Result{Requeue: false}, err //no need to requeue
-	}
-
-	logger.Info("initiating 'exec' request", "url", execReq.URL())
-
-	var stdout, stderr bytes.Buffer
-
-	err = executor.Stream(remotecommand.StreamOptions{
-		Stdin:  nil,
-		Stdout: &stdout,
-		Stderr: &stderr,
-		//Tty:               false,
-		//TerminalSizeQueue: nil,
-	})
-
-	if err != nil {
-		logger.Error(err, "failed to exec command")
-		if strings.Contains(err.Error(), "container not found") {
-			// ngrok container is not ready. give it a while
-			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
-		}
-		return ctrl.Result{}, err
-	}
-
-	// ignoring stderr in this case
-	/*if stderr.Bytes() != nil {
-	}*/
-
-	if stdout.Bytes() == nil {
-		logger.Error(err, "no response from command")
-		return ctrl.Result{}, err
-	}
-
-	//logger.Info("'exec' request finished sucessfully", "response", stdout.String())
-
-	var ngrokInfo NgrokInfo
-	err = json.Unmarshal(stdout.Bytes(), &ngrokInfo)
-
-	if err != nil {
-		logger.Error(err, "ngrok info unmarshal failed")
-		return ctrl.Result{}, err //no need to requeue
-	}
-
-	// ngrok container is not ready. give it a while
-	if len(ngrokInfo.Tunnels) == 0 {
-		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
-	}
-
-	logger.Info("public url - " + ngrokInfo.Tunnels[0].PublicURL)
-
-	kexp.Status.PublicURL = ngrokInfo.Tunnels[0].PublicURL
-
-	err = r.Status().Update(ctx, kexp)
-	if err != nil {
-		logger.Error(err, "failed to update  status with public URL info")
+		logger.Error(err, "failed to update  status with public url info")
 		return ctrl.Result{}, err
 	}
 
