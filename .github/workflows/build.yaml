@@ -7,7 +7,7 @@ jobs:
   build-and-deploy:
     name: BuildAndDeploy
     runs-on: ubuntu-latest
-    container: mcr.microsoft.com/vscode/devcontainers/go:0-1.16
+    #container: mcr.microsoft.com/vscode/devcontainers/go:0-1.16
     steps:
       - name: Check out code
         uses: actions/checkout@v2
