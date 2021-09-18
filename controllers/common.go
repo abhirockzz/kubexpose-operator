@@ -77,8 +77,6 @@ func (r *KubexposeReconciler) createService(ctx context.Context, req ctrl.Reques
 
 	if err != nil {
 		logger.Error(err, "error setting controller reference", "namespace", svc.Namespace, "name", svc.Name)
-
-		// note - this will requeue
 		return ctrl.Result{}, err
 	}
 
@@ -88,8 +86,6 @@ func (r *KubexposeReconciler) createService(ctx context.Context, req ctrl.Reques
 
 	if err != nil {
 		logger.Error(err, "failed to create service", "namespace", svc.Namespace, "name", svc.Name)
-
-		// note - this will requeue
 		return ctrl.Result{}, err
 	}
 
@@ -151,8 +147,6 @@ func (r *KubexposeReconciler) createDeployment(ctx context.Context, req ctrl.Req
 
 	if err != nil {
 		logger.Error(err, "error setting controller reference", "namespace", dep.Namespace, "name", dep.Name)
-
-		// note - this will requeue
 		return ctrl.Result{}, err
 	}
 
@@ -162,8 +156,6 @@ func (r *KubexposeReconciler) createDeployment(ctx context.Context, req ctrl.Req
 
 	if err != nil {
 		logger.Error(err, "failed to create deployment", "namespace", dep.Namespace, "name", dep.Name)
-
-		// note - this will requeue
 		return ctrl.Result{}, err
 	}
 
@@ -255,8 +247,6 @@ func (r *KubexposeReconciler) getURL(ctx context.Context, req ctrl.Request, kexp
 		Stdin:  nil,
 		Stdout: &stdout,
 		Stderr: &stderr,
-		//Tty:               false,
-		//TerminalSizeQueue: nil,
 	})
 
 	if err != nil {
