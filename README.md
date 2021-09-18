@@ -46,7 +46,7 @@ kubectl get kubexpose/kubexpose-test -o=jsonpath='{.status.url}'
 
 Confirm that the `Service` and `Deployment` have been created as well:
 
-```
+```bash
 kubectl get svc/nginx-test-svc-kubexpose-test
 kubectl get deployment/nginx-test-expose-kubexpose-test
 ```
@@ -55,11 +55,17 @@ kubectl get deployment/nginx-test-expose-kubexpose-test
 
 To delete the `kubexpose` resource:
 
-```
+```bash
 kubectl delete kubexpose/kubexpose-test
 ```
 
 > This will also delete the `Service` and `Deployment` which were created for this resource
+
+Delete the Nginx deployment:
+
+```bash
+kubectl delete deployment/nginx-test
+```
 
 To uninstall the Operator:
 
